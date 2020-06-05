@@ -4,7 +4,7 @@
 # 2020 06.04
 # This is test sample.
 # video/CutResult.text ファイル作成
-# 閾値　最適化165 => zero は　0.11あたりの小数値
+# 画像認識　テストコード
 #------------------------
 import cv2
 import os
@@ -25,6 +25,8 @@ def ExtractValue(image_file):
     #----  データバー画像きりだし  (バー部分幾分歪みあり)
     #img_tmp = imag[673 : 681 , 698 : 1120]
     img_tmp = imag[673 :681 , 702 : 1120]
+    
+
     #----- 色基準で2値化する。
     gray_image = cv2.cvtColor(img_tmp, cv2.COLOR_BGR2GRAY)
     cv2.imwrite("gray_image_"+str(image_file.split('_', 4)[-1]), gray_image)
@@ -33,15 +35,46 @@ def ExtractValue(image_file):
     # save image
     cv2.imwrite("black_white_"+str(image_file.split('_', 4)[-1]), bw_image)
 
-    #----- 白色ピクセルをカウントする
-    image_size = bw_image.size
-    whitePixels = cv2.countNonZero(bw_image)
- 
-    whiteAreaRatio = (whitePixels/image_size)*100
- 
-    ## print("White Area [%] : ", whiteAreaRatio)
-    ##p rint("ExtractFueleconomy [ km/l ]  : ", whiteAreaRatio*30/100)
-    return whiteAreaRatio*30/100
+    #---- 画像認識をする 戻り値（オブジェクトの座標を保持している配列、階層構造情報を保持している廃列）
+    contours, hierarchy = cv2.findContours(bw_image, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
+    detect_count = 0
+    ret = 0 
+    #各輪郭に対する処理　オブジェクト毎に処理
+    for i in range(0, len(contours)):
+
+    # 輪郭の領域を計算
+        area = cv2.contourArea(contours[i])
+
+    # ノイズ（小さすぎる領域）と全体の輪郭（大きすぎる領域）を除外
+        if area < 1e2 or 1e5 < area:
+            continue
+
+    # 外接矩形
+        if len(contours[i]) > 0:
+            rect = contours[i]
+            #外接矩形の左上の位置を(x,y)，横と縦のサイズを(w,h)とすると以下の巻数
+            x, y, w, h = cv2.boundingRect(rect)
+            cv2.rectangle(img_tmp, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+            # 外接矩形毎に画像を保存
+            cv2.imwrite(str(image_file.split('_', 4)[-1]) +'_'+ str(detect_count) + '.jpg', img_tmp[y:y + h, x:x + w])
+
+            detect_count = detect_count + 1
+            # 横の長さを入力 @@ 最長を入力してみる
+            if w > ret:
+                ret = w
+    # 外接矩形された画像を表示
+    cv2.imshow('output', img_tmp)
+    cv2.waitKey(0)
+
+    # 終了処理
+    cv2.destroyAllWindows()
+
+
+
+
+  
+    return ret
 
 #-------- --------------------　------------------------
 def GetImagefile(image_path):
@@ -50,12 +83,14 @@ def GetImagefile(image_path):
     bace_path = os.path.dirname(os.path.abspath(__file__)) 
         
     #---- CSVファイルをひらく
-    # if os.path.isfile(os.path.j       oin(bace_path,'ExtractFueleconomy_result')) == True:
+    # if os.path.isfile(os.path.join(bace_path,'ExtractFueleconomy_result')) == True:
     #     print('ExtractFueleconomy_resultファイルが存在します')
     #     sys.exit(0);
     csv_file =  open('ExtractFueleconomy_result','w')
     writer = csv.writer(csv_file)    
-    files = natsorted(os.listdir(image_path))
+   # files = natsorted(os.listdir(image_path))
+    files = natsorted(os.listdir(os.path.join(bace_path, image_path)))
+    
     #print(type(files))
     
     count = 0
