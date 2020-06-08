@@ -1,10 +1,11 @@
-
 #------------------------
 # Nakaitsu write
 # 2020 06.04
 # This is test sample.
 # video/CutResult.text ファイル作成
-# 画像認識　テストコード
+# 画像認識　テストコード　
+# 切り出し太い長、平均燃料で分割している部分あり、足して瞬間燃費を算出
+# 平均燃費部分が加算されているため30%以上の値になる　3部品の足算
 #------------------------
 import cv2
 import os
@@ -24,9 +25,8 @@ def ExtractValue(image_file):
 
     #----  データバー画像きりだし  (バー部分幾分歪みあり)
     #img_tmp = imag[673 : 681 , 698 : 1120]
-    img_tmp = imag[673 :681 , 702 : 1120]
+    img_tmp = imag[654 :696, 702 : 1120]
     
-
     #----- 色基準で2値化する。
     gray_image = cv2.cvtColor(img_tmp, cv2.COLOR_BGR2GRAY)
     cv2.imwrite("gray_image_"+str(image_file.split('_', 4)[-1]), gray_image)
@@ -61,20 +61,20 @@ def ExtractValue(image_file):
 
             detect_count = detect_count + 1
             # 横の長さを入力 @@ 最長を入力してみる
-            if w > ret:
-                ret = w
+            #if w > ret:
+            ret += w
     # 外接矩形された画像を表示
-    cv2.imshow('output', img_tmp)
-    cv2.waitKey(0)
+    #cv2.imshow('output', img_tmp)
+    #cv2.waitKey(0) """
 
     # 終了処理
-    cv2.destroyAllWindows()
+    #cv2.destroyAllWindows()
 
 
 
 
-  
-    return ret
+    #return ret
+    return (ret/(418*100))*30
 
 #-------- --------------------　------------------------
 def GetImagefile(image_path):
