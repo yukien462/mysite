@@ -30,20 +30,22 @@ def ExtractValue(image_file):
     #===== 適応的閾値処理 ======================================
     # http://labs.eecs.tottori-u.ac.jp/sd/Member/oyamada/OpenCV/html/py_tutorials/py_imgproc/py_thresholding/py_thresholding.html
     # 参考　===================================================
-   
-    cv2.imwrite("gray_img/gray_image_"+str(image_file.split('_', 4)[-1]), gray_image)
+    # save image debug用にフォルダに書き込む
+    file_path = os.path.join(bace_path, 'Debug_img')
+    os.makedirs(file_path, exist_ok=True)
+    cv2.imwrite("Debug_img/gray_"+str(image_file.split('_', 4)[-1]), gray_image)
+    # black white (閾値を中満指定の固定値とする)
+    ret, bw_image = cv2.threshold(gray_image, 190,255,cv2.THRESH_BINARY)
     # black white （近傍領域の中央値を閾値とする）
-    bw_image = cv2.adaptiveThreshold(gray_image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
-     # black white （近傍領域の重み付け平均値を閾値とします。重みの値はGauusian分布になる様に計算してされます）
-   # bw_image = cv2.adaptiveThreshold(gray_image, 255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,11,2)
+    #bw_image = cv2.adaptiveThreshold(gray_image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
+    # black white （近傍領域の重み付け平均値を閾値とします。重みの値はGauusian分布になる様に計算してされます）
+    #bw_image = cv2.adaptiveThreshold(gray_image, 255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,11,2)
 
     # Otsu's thresholding
     #ret,bw_image = cv2.threshold(gray_image,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 
     # save image debug用にフォルダに書き込む
-    os.makedirs('bw', exist_ok=True)
-    base_path = os.path.join('bw', basename)
-   @@@@@@@@@@@@@ cv2.imwrite("black_white_"+str(image_file.split('_', 4)[-1]), bw_image)
+    cv2.imwrite("Debug_img/bw_"+str(image_file.split('_', 4)[-1]), bw_image)
 
     #---- 画像認識をする 戻り値（オブジェクトの座標を保持している配列、階層構造情報を保持している配列）
     contours, hierarchy = cv2.findContours(bw_image, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)
@@ -66,7 +68,7 @@ def ExtractValue(image_file):
             cv2.rectangle(img_tmp, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
             # 外接矩形毎に画像を保存
-            cv2.imwrite(str(image_file.split('_', 4)[-1]) +'_'+ str(detect_count) + '.jpg', img_tmp[y:y + h, x:x + w])
+            cv2.imwrite('Debug_img/'+str(image_file.split('_', 4)[-1]) +'_'+ str(detect_count) + '.jpg', img_tmp[y:y + h, x:x + w])
 
             detect_count = detect_count + 1
             # 横の長さを入力 @@ 最長を入力してみる
@@ -79,7 +81,7 @@ def ExtractValue(image_file):
     # 終了処理
     #cv2.destroyAllWindows()
     #return ret
-    return (ret/(418*100))*30
+    return (ret/418)*30
 
 #-------- --------------------　------------------------
 def GetImagefile(image_path):
